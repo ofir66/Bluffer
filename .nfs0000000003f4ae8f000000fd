@@ -1,0 +1,16 @@
+{
+  "questions": [
+    {
+      "questionText": "Wubba <BLANK> dub dub",
+      "realAnswer": "lubba"
+    },
+    {
+      "questionText": "<BLANK> at me!, I'm Mr. Meeseeks. Mr. Meeseeks.",
+      "realAnswer": "look"
+    },
+    {
+      "questionText": "<BLANK> is the best provision for the journey to old age. Aristotle",
+      "realAnswer": "Education"
+    }
+  ]
+}
