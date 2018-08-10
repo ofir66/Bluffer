@@ -20,12 +20,14 @@ public class KeyboardReadingThread implements Runnable{
 	public void run() {
 		PrintWriter out = null;
 		String msg;
+		
 		try {
 			out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"), true);
 		} catch (IOException e1) {
 			System.out.println("Couldn't get output to server connection");
 			System.exit(1);
 		}
+		
 		while(true){
 			try {
 				msg = userIn.readLine();
