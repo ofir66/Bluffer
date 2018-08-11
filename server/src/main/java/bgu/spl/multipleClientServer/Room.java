@@ -59,6 +59,7 @@ public class Room {
 	 */
 	public void sendMessageToAllPlayers(String msg){
 		Iterator<Player> it= this.playersList.iterator();
+		
 		while (it.hasNext()){
 			try{
 				it.next().getCallback().sendMessage(new StringMessage(msg));
@@ -74,8 +75,10 @@ public class Room {
 	 */
 	public void sendMessageToAllPlayersExceptSender(String msg, Player player){
 		Iterator<Player> it= this.playersList.iterator();
+		Player iPlayer;
+		
 		while (it.hasNext()){
-			Player iPlayer=it.next();
+			iPlayer=it.next();
 			try{
 				if (iPlayer!=player)
 					iPlayer.getCallback().sendMessage(new StringMessage(msg));
@@ -93,6 +96,7 @@ public class Room {
 		if (game.getClass().getSimpleName().equals("Bluffer")){
 			return ((Bluffer)game).isCorrect(answer);
 		}
+		
 		return false;
 	}
 	/** Auxiliary method (needed for a case a player choose to bluff with a different player's bluff. we won't allow this)
@@ -104,6 +108,7 @@ public class Room {
 		if (game.getClass().getSimpleName().equals("Bluffer")){
 			return ((Bluffer)game).isBluff(answer);
 		}
+		
 		return false;
 	}
 	
@@ -114,8 +119,10 @@ public class Room {
 	 */	
 	public void startGame(String gameName,ProtocolCallback<StringMessage> callback){ 
 		Iterator<Player> it = this.playersList.iterator();
+		Player player;
+		
 		while (it.hasNext()){
-			Player player =it.next();
+			player =it.next();
 			player.setTotalScore(0);
 			player.setRoundScore(0);
 		}
@@ -143,7 +150,7 @@ public class Room {
 	}
 	
 	
-		public final boolean isPlaying() {
+	public final boolean isPlaying() {
 		return isPlaying;
 	}
 	
