@@ -1,4 +1,4 @@
-package bgu.spl.server;
+package bgu.spl.multipleClientServer;
 
 import java.io.*;
 import java.net.*;

@@ -1,4 +1,4 @@
-package bgu.spl.client;
+package bgu.spl.gameClient;
 
 import java.io.*;
 import java.net.*;

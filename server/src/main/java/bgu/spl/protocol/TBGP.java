@@ -8,9 +8,9 @@ import com.google.gson.stream.JsonReader;
 
 import bgu.spl.game.Bluffer;
 import bgu.spl.game.Game;
-import bgu.spl.server.DataBase;
-import bgu.spl.server.Player;
-import bgu.spl.server.Room;
+import bgu.spl.multipleClientServer.DataBase;
+import bgu.spl.multipleClientServer.Player;
+import bgu.spl.multipleClientServer.Room;
 import bgu.spl.tokenizer.StringMessage;
 
 public class TBGP implements AsyncServerProtocol<StringMessage> {

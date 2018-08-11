@@ -1,4 +1,4 @@
-package bgu.spl.server;
+package bgu.spl.multipleClientServer;
 
 import bgu.spl.protocol.ProtocolCallback;
 import bgu.spl.tokenizer.StringMessage;

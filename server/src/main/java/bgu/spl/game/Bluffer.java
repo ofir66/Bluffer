@@ -17,8 +17,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import bgu.spl.protocol.ProtocolCallback;
-import bgu.spl.server.DataBase;
-import bgu.spl.server.Player;
+import bgu.spl.multipleClientServer.DataBase;
+import bgu.spl.multipleClientServer.Player;
 import bgu.spl.tokenizer.StringMessage;
 
 public class Bluffer implements Game {
