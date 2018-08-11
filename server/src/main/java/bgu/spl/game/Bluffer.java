@@ -55,46 +55,63 @@ public class Bluffer implements Game {
 	}
 	
 	public void startGame(String name, ProtocolCallback<StringMessage> callback) {
-		database.getPlayers().get(callback).getRoom().setGameState(0);
-		database.setRun(database.getPlayers().get(callback).getRoom().getfName(),true);
 		HashMap<String,String> questions= new HashMap<String,String>();
 		JsonReader jreader=null;
+		JsonParser jparser = new JsonParser();
+		int i;
+		
+		database.getPlayers().get(callback).getRoom().setGameState(0);
+		database.setRun(database.getPlayers().get(callback).getRoom().getfName(),true);
+		
 		try {
 			jreader = new JsonReader(new FileReader("bluffer.json"));
 		} catch (FileNotFoundException e1) {
 			return;
 		}
-        JsonParser jparser = new JsonParser();
-        JsonElement element = jparser.parse(jreader);
-        if (element.isJsonObject()){
-        	JsonObject jobject = element.getAsJsonObject();
-        	JsonArray jQuestions = jobject.get("questions").getAsJsonArray();
-        	for (JsonElement jQuestion : jQuestions){
-        		String question = jQuestion.getAsJsonObject().get("questionText").getAsString();
-        		String answer = jQuestion.getAsJsonObject().get("realAnswer").getAsString();
-        		questions.put(question, answer);
-        	}
-        }
+		
+        initQuestions(questions, jreader, jparser);
+        i = (int)(Math.random()*questions.size());
         this.players = database.getPlayers().get(callback).getRoom().getPlayersList(); // put all the players in the room in the game players list
-		// We now have question database and list of players.
-		this.round = 0;
-		int i = (int)(Math.random()*questions.size());
-		this.bluffesForQuestion.clear(); // clear all fields from previous game
-		this.peopleChoosed.clear();
-		this.shuffeledAnswers.clear();
-		this.questions.clear(); 
-		this.answers.clear();
+		clearPreviousGameData();
 
-		for (String question: questions.keySet()){
+		for (String q: questions.keySet()){
 			while (this.questions.get(i)!=null)
 				i = (int)(Math.random()*questions.size());
-			this.questions.put(i, question); // load question
-			this.answers.put(i, questions.get(question)); // load answer
+			this.questions.put(i, q); // load question
+			this.answers.put(i, questions.get(q)); // load answer
 			i = (int)(Math.random()*questions.size());
 		}
 		if (!this.askQuestion())
 			throw new IllegalStateException(" error. couldn't ask a question although the game is just starting!"); 
 		database.getPlayers().get(callback).getRoom().setGameState(1);
+	}
+
+	private void clearPreviousGameData() {
+		this.round = 0;
+		this.bluffesForQuestion.clear(); // clear all fields from previous game
+		this.peopleChoosed.clear();
+		this.shuffeledAnswers.clear();
+		this.questions.clear(); 
+		this.answers.clear();
+	}
+
+	private void initQuestions(HashMap<String, String> questions, JsonReader jreader, JsonParser jparser) {
+		JsonElement element;
+		JsonObject jobject;
+		JsonArray jQuestions;
+		String question;
+		String answer;
+		
+		element = jparser.parse(jreader);
+        if (element.isJsonObject()){
+        	jobject = element.getAsJsonObject();
+        	jQuestions = jobject.get("questions").getAsJsonArray();
+        	for (JsonElement jQuestion : jQuestions){
+        		question = jQuestion.getAsJsonObject().get("questionText").getAsString();
+        		answer = jQuestion.getAsJsonObject().get("realAnswer").getAsString();
+        		questions.put(question, answer);
+        	}
+        }
 	}
 	
 	private boolean askQuestion(){
@@ -113,6 +130,7 @@ public class Bluffer implements Game {
 
 	public void TXTRESP(String bluff, ProtocolCallback<StringMessage> callback) {
 		Player player = database.getPlayers().get(callback);
+		
 		player.setLastBluufingAnswer(bluff);
 		if (this.TXTRESP(player))
 			player.getRoom().setGameState(2);
@@ -125,8 +143,11 @@ public class Bluffer implements Game {
 	 * @return true if everyone sent their TXTRESP for current question. false otherwise
 	 */
 	private boolean TXTRESP(Player player){
+		ConcurrentLinkedQueue<Player> playersBluffed;
+		CopyOnWriteArrayList<String> bluffers=new CopyOnWriteArrayList<String>();
+		
 		synchronized(this.lockTXTRESP){
-			ConcurrentLinkedQueue<Player> playersBluffed=this.bluffesForQuestion.get(this.round); // we find the players answered so far
+			playersBluffed=this.bluffesForQuestion.get(this.round); // we find the players answered so far
 			if (playersBluffed==null){ // if no one chose before
 				playersBluffed=new ConcurrentLinkedQueue<Player>();
 				this.bluffesForQuestion.put(this.round, playersBluffed);
@@ -134,17 +155,9 @@ public class Bluffer implements Game {
 			if (playersBluffed.contains(player))
 				return false; // in case a player tries to send another TXTRESP when he already did
 			playersBluffed.add(player);
+			
 			if (playersBluffed.size()==this.players.size()){ // if everyone sent their bluffing
-				CopyOnWriteArrayList<String> bluffers=new CopyOnWriteArrayList<String>(); // we will create bluffs list to save their bluffs
-				Iterator<Player> it= playersBluffed.iterator();
-				while (it.hasNext()){
-					Player iPlayer=it.next();
-					if (!this.isListContainsString(bluffers, iPlayer.getLastBluufingAnswer()))
-						bluffers.add(iPlayer.getLastBluufingAnswer()); // we will not allow duplicates in our answers (it is written in the forum that we don't have to show duplicates)
-				}
-				String ASKCHOICES=this.shuffleAnswers(bluffers); // creating the ASKCHOICES
-				ASKCHOICES="<    "+ASKCHOICES+"    >";
-				player.getRoom().sendMessageToAllPlayers(ASKCHOICES); // and sending to all players
+				createAskChoices(player, playersBluffed, bluffers);
 				return true;
 			}
 			else{
@@ -152,12 +165,31 @@ public class Bluffer implements Game {
 			}
 		}
 	}
+
+	private void createAskChoices(Player player, ConcurrentLinkedQueue<Player> playersBluffed,
+			CopyOnWriteArrayList<String> bluffers) {
+		
+		Iterator<Player> it;
+		Player iPlayer;
+		String ASKCHOICES;
+		
+		it= playersBluffed.iterator();
+		while (it.hasNext()){
+			iPlayer=it.next();
+			if (!this.isListContainsString(bluffers, iPlayer.getLastBluufingAnswer()))
+				bluffers.add(iPlayer.getLastBluufingAnswer()); // we will not allow duplicates in our answers (it is written in the forum that we don't have to show duplicates)
+		}
+		ASKCHOICES=this.shuffleAnswers(bluffers); // creating the ASKCHOICES
+		ASKCHOICES="<    "+ASKCHOICES+"    >";
+		player.getRoom().sendMessageToAllPlayers(ASKCHOICES); // and sending to all players
+	}
 	
 	private boolean isListContainsString(CopyOnWriteArrayList<String> list, String str){
 		for (int i=0; i<list.size(); ++i){
 			if (list.get(i).equals(str))
 				return true;
 		}
+		
 		return false;
 	}
 	
@@ -167,12 +199,13 @@ public class Bluffer implements Game {
 	 * @return the choices the players now need to choose 
 	 */
 	private String shuffleAnswers(CopyOnWriteArrayList<String> answers){
+		String ASKCHOICES="ASKCHOICES";
+		
 		for (int i=0; i<answers.size(); ++i){ // first we will switch to lowercase
 			answers.set(i, answers.get(i).toLowerCase());
 		}
 		answers.add(this.answers.get(this.round-1).toLowerCase()); // then we will add the real answer
 		Collections.shuffle(answers); // then shuffle
-		String ASKCHOICES="ASKCHOICES";
 		for (int i=0; i<answers.size(); ++i){ // now we want to create the ASKCHOICES
 			ASKCHOICES=ASKCHOICES+" "+i+"."+answers.get(i);
 		}
@@ -180,11 +213,13 @@ public class Bluffer implements Game {
 		for(int i=0; i<answers.size(); ++i){
 			this.shuffeledAnswers.add(answers.get(i));
 		}
+		
 		return ASKCHOICES;
 	}
 
 	public void SELECTRESP(String msg, ProtocolCallback<StringMessage> callback) {
 		Player player = database.getPlayers().get(callback);
+		
 		player.setLastChoice(Integer.parseInt(msg)); // don't need to check for exception as this method only called after checking it in the TBGP
 		if (this.SELECTRESP(player)){
 			if (!this.askQuestion()){ // if question wasn't asked -> the game is over.
@@ -209,15 +244,18 @@ public class Bluffer implements Game {
 	 * @return true if the answer to the last question is correct. false otherwise.
 	 */
 	public boolean isBluff(String answer){
-		if (this.bluffesForQuestion!=null)
-			if (this.bluffesForQuestion.get(this.round)!=null)
-				if (!this.bluffesForQuestion.get(this.round).isEmpty()) {
-					Iterator<Player> it= bluffesForQuestion.get(this.round).iterator();
+		Iterator<Player> it;
+		
+		if ( (bluffesForQuestion!=null) && (bluffesForQuestion.get(round)!=null) &&
+				(!bluffesForQuestion.get(round).isEmpty()) 
+			){
+					it= bluffesForQuestion.get(round).iterator();
 					while (it.hasNext()){
 						if (it.next().getLastBluufingAnswer().toLowerCase().equals(answer.toLowerCase()))
 							return true;
 					}
-				}
+		}
+		
 		return false;
 	}
 	
@@ -225,8 +263,10 @@ public class Bluffer implements Game {
 	 * Symmetric to TXTRESP method, but instead of update the fShuffledAnswers field, it will calculate the players score.
 	 */
 	private boolean SELECTRESP(Player player){
+		ConcurrentLinkedQueue<Player> playersChosed;
+		
 		synchronized(this.lockSELECTRESP){
-			ConcurrentLinkedQueue<Player> playersChosed=this.peopleChoosed.get(this.round); // we find the players answered so far
+			playersChosed=this.peopleChoosed.get(this.round); // we find the players answered so far
 			if (playersChosed==null){ // if no one chose before
 				playersChosed=new ConcurrentLinkedQueue<Player>();
 				playersChosed.add(player);
@@ -236,35 +276,10 @@ public class Bluffer implements Game {
 				playersChosed.add(player);
 				this.peopleChoosed.put(this.round, playersChosed);
 			}
+			
 			if (playersChosed.size()==this.players.size()){ // if now every one has chosen a choice
 				player.getRoom().sendMessageToAllPlayers("<    GAMEMSG The correct answer is: "+this.answers.get(this.round-1)+"    >"); // we first send the correct answer to everyone
-				Iterator<Player> i=this.players.iterator();
-				while (i.hasNext()){ // for each player
-					Player iPlayer=i.next();
-					if (iPlayer.getLastChoice()==this.shuffeledAnswers.indexOf(this.answers.get(this.round-1).toLowerCase())){ // if he answered right
-						iPlayer.setRoundScore(10);
-						iPlayer.setTotalScore(iPlayer.getTotalScore()+10);
-						iPlayer.setIsCorrectedOnLastQuestion(true);
-					}
-					else{
-						iPlayer.setRoundScore(0);
-						iPlayer.setIsCorrectedOnLastQuestion(false);
-					}
-				}
-				Iterator<Player> j=this.players.iterator();
-				while (j.hasNext()){ // for each player j
-					Player jPlayer=j.next();
-					Iterator<Player> k=this.players.iterator();
-					while (k.hasNext()){ // for each player k, so that k!=j
-						Player kPlayer=k.next();
-						if (jPlayer!=kPlayer){
-							if (this.shuffeledAnswers.get(kPlayer.getLastChoice()).equals(jPlayer.getLastBluufingAnswer().toLowerCase())){ // if player j fooled player k
-								jPlayer.setRoundScore(jPlayer.getRoundScore()+5);
-								jPlayer.setTotalScore(jPlayer.getTotalScore()+5);
-							}
-						}
-					}
-				}
+				calculateRoundScore();
 				this.sendResultMessageToAllPlayers(); // update players with their results
 				this.peopleChoosed.clear();
 				return true;
@@ -273,11 +288,48 @@ public class Bluffer implements Game {
 				return false;
 		}
 	}
+
+	private void calculateRoundScore() {
+		Iterator<Player> i=this.players.iterator();
+		Iterator<Player> k;
+		Player iPlayer;
+		Player kPlayer;
+
+		while (i.hasNext()){ // for each player
+			iPlayer=i.next();
+			if (iPlayer.getLastChoice()==this.shuffeledAnswers.indexOf(this.answers.get(this.round-1).toLowerCase())){ // if he answered right
+				iPlayer.setRoundScore(10);
+				iPlayer.setTotalScore(iPlayer.getTotalScore()+10);
+				iPlayer.setIsCorrectedOnLastQuestion(true);
+			}
+			else{
+				iPlayer.setRoundScore(0);
+				iPlayer.setIsCorrectedOnLastQuestion(false);
+			}
+		}
+		
+		i=this.players.iterator();
+		while (i.hasNext()){ // for each player i
+			iPlayer=i.next();
+			k=this.players.iterator();
+			while (k.hasNext()){ // for each player k, so that k!=i
+				kPlayer=k.next();
+				if (iPlayer!=kPlayer){
+					if (this.shuffeledAnswers.get(kPlayer.getLastChoice()).equals(iPlayer.getLastBluufingAnswer().toLowerCase())){ // if player i fooled player k
+						iPlayer.setRoundScore(iPlayer.getRoundScore()+5);
+						iPlayer.setTotalScore(iPlayer.getTotalScore()+5);
+					}
+				}
+			}
+		}
+	}
 	
 	private void sendResultMessageToAllPlayers(){
 		Iterator<Player> it= this.players.iterator();
+		Player iPlayer;
+		
 		while (it.hasNext()){
-			Player iPlayer=it.next();
+			iPlayer=it.next();
 			try{
 				if (iPlayer.isIsCorrectedOnLastQuestion())
 					iPlayer.getCallback().sendMessage(new StringMessage("<GAMEMSG correct! +" +iPlayer.getRoundScore()+"pts>"));
@@ -291,8 +343,10 @@ public class Bluffer implements Game {
 	private void summary(){
 		String msg = "<GAMEMSG Summary:";
 		Iterator<Player> it = this.players.iterator();
+		Player player;
+		
 		while (it.hasNext()){
-			Player player = it.next();
+			player = it.next();
 			msg = msg+" "+player.getNick()+": "+player.getTotalScore()+"pts, ";
 		}
 		msg = msg.substring(0,msg.length()-2)+">"; // for removing the ", " in the end
@@ -309,9 +363,9 @@ public class Bluffer implements Game {
 	 * @return true if the player gave his TXTRESP, false otherwise.
 	 */
 	public boolean hasBluffed(Player player){
-		if (this.bluffesForQuestion!=null)
-			if(this.bluffesForQuestion.get(round)!=null)
-				return this.bluffesForQuestion.get(round).contains(player);
+		if ( (bluffesForQuestion!=null) && (bluffesForQuestion.get(round)!=null) )
+				return bluffesForQuestion.get(round).contains(player);
+		
 		return false;
 	}
 	
@@ -319,9 +373,9 @@ public class Bluffer implements Game {
 	 *  Symmetric to hasBluffed method, just with SELECTRESP instead of TXTRESP
 	 */
 	public boolean hasSelected(Player player){
-		if (this.peopleChoosed!=null)
-			if (this.peopleChoosed.get(round)!=null)
+		if ( (peopleChoosed!=null) && (peopleChoosed.get(round)!=null) )
 				return this.peopleChoosed.get(round).contains(player);
+		
 		return false;
 	}
 }
