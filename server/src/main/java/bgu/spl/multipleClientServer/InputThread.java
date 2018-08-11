@@ -19,6 +19,7 @@ public class InputThread implements Runnable {
 	public void run() {
 		BufferedReader buffer=new BufferedReader(new InputStreamReader(System.in));
 		String line=null;
+		
 		while(true){
 			try{ 
 				line=buffer.readLine();
