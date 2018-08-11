@@ -66,12 +66,14 @@ class ConnectionHandler implements Runnable {
     
     public void process() throws IOException
     {
-    	while (!protocol.shouldClose() && !clientSocket.isClosed()){
+    	String msg;
+		
+		while (!protocol.shouldClose() && !clientSocket.isClosed()){
     		try{
     			if (!tokenizer.isAlive())
     				protocol.connectionTerminated();
     			else{
-    				String msg = tokenizer.nextToken();
+    				msg = tokenizer.nextToken();
     				protocol.processMessage(new StringMessage(msg), callback);
     			}
     		} catch (IOException e){
@@ -87,6 +89,7 @@ class ConnectionHandler implements Runnable {
        // Initialize I/O
         out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(),encoder.getCharset()), true);
         callback = new ProtocolCallbackImpl(out);
+		
         return callback;
     }
     
@@ -126,12 +129,14 @@ class MultipleClientProtocolServer implements Runnable {
     
     public void run()
     {
+		Socket socket;
+		Encoder encoder = new EncoderImpl("UTF-8");
+		
         try {
-        	System.out.println("Server IP address is " + InetAddress.getLocalHost().getHostAddress());
-            serverSocket = new ServerSocket(listenPort);
-            System.out.println("Server is ready. Listening on port "+ listenPort);
-	    System.out.println("Number of clients connected to the server: "+connectionCount.get());
-	    System.out.println();
+			serverSocket = new ServerSocket(listenPort);
+        	System.out.println("Server IP address is " + InetAddress.getLocalHost().getHostAddress() + "\n" +
+								"Server is ready. Listening on port " + listenPort + "\n" +
+								"Number of clients connected to the server: " + connectionCount.get() + "\n");
         }
         catch (IOException e) {
             System.out.println("Cannot listen to selected port. Please reconnect to available port in the range 1-65535");
@@ -143,21 +148,19 @@ class MultipleClientProtocolServer implements Runnable {
         while (true)
         {
             try {
-            	Socket socket = serverSocket.accept();
-		        Encoder encoder = new EncoderImpl("UTF-8");
+            	socket = serverSocket.accept();
 		        StringTokenizer tokenizer = new StringTokenizer(new InputStreamReader(socket.getInputStream(),encoder.getCharset()),'\n');
 				ConnectionHandler newConnection = new ConnectionHandler(socket,encoder,tokenizer, factory.create(), connectionCount);
 				new Thread(newConnection).start();
             }
             catch(SocketException e){
-	      break;
+				break;
             }
-            catch (IOException e)
-            {
+            catch (IOException e){
                 System.out.println("Failed to accept on port " + listenPort);
             }
             catch (NullPointerException e){
-	      break;
+				break;
             }
         }
     }
@@ -166,8 +169,8 @@ class MultipleClientProtocolServer implements Runnable {
     // Closes the connection
     public void close() throws IOException
     {
-	if (serverSocket!=null)
-	  serverSocket.close();
+		if (serverSocket!=null)
+		  serverSocket.close();
     }
     
     public static void main(String[] args) throws IOException
@@ -175,10 +178,10 @@ class MultipleClientProtocolServer implements Runnable {
         // Get port
         int port = Integer.decode(args[0]).intValue();
         AtomicInteger connectionCount= new AtomicInteger(0);
-
         MultipleClientProtocolServer server = new MultipleClientProtocolServer(port, new TBGPFactory(), connectionCount);
         Thread serverThread = new Thread(server);
         Thread inputThread=new Thread(new InputThread(server, connectionCount));
+		
         serverThread.start();
         inputThread.start();
         try {
