@@ -56,7 +56,7 @@ public class Client {
         		}
         		System.out.print(tmp);
         		if ((len>0 && tmp.charAt(tmp.length()-1)=='>') ||  tmp.contains("UNIDENTIFIED")){
-        			System.out.println();
+        			System.out.println("\n");
         			synchronized(userIn){
         				userIn.notifyAll();
         			}
