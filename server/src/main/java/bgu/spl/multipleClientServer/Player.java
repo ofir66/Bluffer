@@ -2,42 +2,30 @@ package bgu.spl.multipleClientServer;
 
 import bgu.spl.protocol.ProtocolCallback;
 import bgu.spl.tokenizer.StringMessage;
-/**
- * A class represents a player in the server, contains the needed information for us to handle a player
- * 
- *
- */
+
 public class Player {
-	/**
-	 * the nick of the player
-	 */
+
 	private String nick;
 	/**
-	 * the callback unique to this player
+	 * the callback that is unique to this player
 	 */
 	private ProtocolCallback<StringMessage> callback;
 	/**
 	 * the {@link Room} that the player is in (null if he isn't in a {@link Room})
 	 */
 	private Room room;
-	/**
-	 * Field that indicates if the player was right in his last question at a game (false at initialize)
-	 */
 	private boolean isCorrectedOnLastQuestion;
-	/**
-	 * Field that save the last bluff from the player (null at initialize)
-	 */
 	private String lastBluufingAnswer;
 	/**
-	 * The last choice the player selected in a game 
+	 * The last choice that the player selected in a game 
 	 */
 	private int lastChoice;
 	/**
-	 * The round score of a player in a current round in a game
+	 * The round score of the player in the current game he is playing (if isn't playing - this field value is meaningless)
 	 */
 	private int roundScore;
 	/**
-	 * The total score of a player in a current game
+	 * The total score of the player in the last game played by him (if didn't play a game - this field value is meaningless)
 	 */
 	private int totalScore;
 	

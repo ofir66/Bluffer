@@ -1,19 +1,19 @@
 package bgu.spl.protocol;
 
 /**
- * A protocol that describes the behavior of the server.
+ * A protocol that describes the behaviour of the server.
  */
 public interface AsyncServerProtocol<T> extends ServerProtocol<T> {
 
 	/**
-	 * processes a message
+	 * Processes a message
 	 * @param msg the message to process
 	 * @return the reply that should be sent to the client, or null if no reply needed
 	 */
 	void processMessage(T msg, ProtocolCallback<T> callback);
 
 	/**
-	 * Determine whether the given message is the termination message
+	 * Determines whether the given message is the termination message
 	 * @param msg the message to examine
 	 * @return true if the message is the termination message, false otherwise
 	 */
@@ -28,7 +28,7 @@ public interface AsyncServerProtocol<T> extends ServerProtocol<T> {
 	boolean shouldClose();
 
 	/**
-	 * Indicate to the protocol that the client disconnected.
+	 * Indicates to the protocol that the client disconnected.
 	 */
 	public void connectionTerminated();
 

@@ -21,7 +21,7 @@ class ConnectionHandler implements Runnable {
     Socket clientSocket;
     ServerProtocol<StringMessage> protocol;
     /**
-     * the callback representing the client (player).
+     * the callback representing the player.
      */
     ProtocolCallbackImpl callback;
     

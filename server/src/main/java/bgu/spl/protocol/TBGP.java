@@ -14,7 +14,7 @@ import bgu.spl.tokenizer.StringMessage;
 
 public class TBGP implements AsyncServerProtocol<StringMessage> {
 	/**
-	 * the last response sent by the server
+	 * The last response sent by the server
 	 */
 	private String lastResponse=""; 
 	private boolean connectionTerminated;
@@ -33,7 +33,6 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 			try{
 				param=message.substring(message.indexOf(" ")+1,message.length());
 			} catch (IndexOutOfBoundsException e){
-				// param will stay empty in this case
 				param = "";
 			}
 		}
@@ -115,19 +114,19 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 		if (param.isEmpty())
 			this.lastResponse = "<SYSMSG NICK REJECTED No parameters were given>";
 		else{
-			if (!database.getPlayers().containsKey(callback)){  // our database does not contain the requested player (player has no NICK)
+			if (!database.getPlayers().containsKey(callback)){  // the database does not contain the requested player (player has no NICK)
 				synchronized (database.getNicks()){
-					if (!database.getNicks().contains(param)){ // and nick is not taken
+					if (!database.getNicks().contains(param)){ // nick is not taken
 						database.getNicks().add(param);
 						player=new Player(param, callback);
 						database.getPlayers().put(callback,player);
 						this.lastResponse="<SYSMSG NICK ACCEPTED>";
 					}
-					else // our database contains the requested nick
+					else // the database contains the requested nick
 						this.lastResponse="<SYSMSG NICK REJECTED This NICK was already taken>";	
 				}
 			}
-			else // our database contains this player => you can't change a nick!
+			else // the database contains this player => can't change a nick!
 				this.lastResponse="<SYSMSG NICK REJECTED Already have a NICK>";
 		}
 		this.sendMessage(this.lastResponse, callback);
@@ -142,12 +141,11 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 		else{
 			player = database.getPlayers().get(callback);
 			if (player!=null){ // otherwise there is no such player and he can't join a room
-				// if the player is in our database then he has a nick. No need to check it
 				room = player.getRoom();
-				if (room!=null){ // if the player is already in a room we will need to check if the room is currently playing
+				if (room!=null){ // if the player is already in a room, need to check if the room is currently playing
 					leaveToOtherRoom(param, database, player, room);
 				}
-				else{ // the player is not in a room so he can join a new one if a game has not started in it already
+				else{ // the player is not in a room so he can join a new one, if a game has not started in it already
 					enterRoom(param, database, player);
 				}
 			}
@@ -160,11 +158,11 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 	private void enterRoom(String param, DataBase database, Player player) {
 		if (database.getRooms().containsKey(param)){ // if the requested room exists
 			synchronized (database.getRooms().get(param)){ 
-				if (database.getRooms().get(param).isPlaying()) // we should check if he's in the middle of a game
+				if (database.getRooms().get(param).isPlaying()) // check if the room is in the middle of a game
 					this.lastResponse = "<SYSMSG JOIN REJECTED Requested room is in the middle of a game>";
 				else{ 
 					player.setRoom(database.getRooms().get(param)); // sets player's room to the new room
-					player.getRoom().addPlayer(player); // adds the player to the new room list of players
+					player.getRoom().addPlayer(player);
 					this.lastResponse = "<SYSMSG JOIN ACCEPTED>";
 				}
 			}
@@ -180,7 +178,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 		else{ // his room isn't playing right now so he can leave
 			if (database.getRooms().containsKey(param)){ // if the room exists
 				synchronized (database.getRooms().get(param)){
-					if (database.getRooms().get(param).isPlaying()) // we should check if this room in the middle of a game
+					if (database.getRooms().get(param).isPlaying()) // check if this room in the middle of a game
 						this.lastResponse = "<SYSMSG JOIN REJECTED Requested room is in the middle of a game>";
 					else{ // the room exist but isn't playing!
 						if (room.getfName().equals(param)) // requested room is current room
@@ -211,7 +209,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 	private void joinExistingRoom(String param, DataBase database, Player player, Room room) {
 		room.removePlayer(player); // removes the player from his room
 		player.setRoom(database.getRooms().get(param)); // sets player's room to the new room
-		player.getRoom().addPlayer(player); // adds the player to the new room list of players
+		player.getRoom().addPlayer(player); // adds the player to the room's list of players
 		this.lastResponse = "<SYSMSG JOIN ACCEPTED>";
 	}
 	
@@ -223,10 +221,10 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 			this.lastResponse = "<SYSMSG MSG REJECTED No parameters were given>";
 		else{
 			player = database.getPlayers().get(callback);
-			if (player!=null){ // then player has a nick.
+			if (player!=null){
 				room = player.getRoom();
-				if (room!=null){ // means the player is in a room
-					if (!room.isPlaying()){ // means the room is not playing right now so can send a message
+				if (room!=null){
+					if (!room.isPlaying()){
 						this.lastResponse = "<SYSMSG MSG ACCEPTED>";
 					}
 					else 
@@ -244,16 +242,16 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 	}
 	
 	private void startGame_handle(DataBase database, ProtocolCallback<StringMessage> callback){
-		Player player=database.getPlayers().get(callback); // finding user name
+		Player player=database.getPlayers().get(callback);
 		JsonReader jreader;
 		
 		if (player==null){ // if the user tries to STARTGAME before having a nick
 			this.lastResponse = "<SYSMSG STARTGAME REJECTED Must JOIN a room first>";
 		}
-		else{ // means player is not null
+		else{
 			if (player.getRoom()==null) //  if the user tries to STARTGAME before entering a room
 				this.lastResponse = "<SYSMSG STARTGAME REJECTED Must JOIN a room first>";
-			else{ // means room is not null
+			else{
 				synchronized (player.getRoom()){ 
 					if (player.getRoom().isPlaying())
 						this.lastResponse = "<SYSMSG STARTGAME REJECTED A game has already started in this room>";
@@ -289,7 +287,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 			this.lastResponse = "<SYSMSG TXTRESP REJECTED No parameters were given>";
 		else{
 			player = database.getPlayers().get(callback);
-			if (player == null) // player is null means player deosn't have a nick
+			if (player == null) // player is null means player doesn't have a nick
 				this.lastResponse = "<SYSMSG TXTRESP REJECTED Must choose a NICK first>";
 			else{ // player has a nick
 				room = player.getRoom();
@@ -344,7 +342,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 				else{ 
 					if (!room.isPlaying()) 
 						this.lastResponse = "<SYSMSG SELECTRESP REJECTED Cannot send a SELECTRESP if not in the middle of a game>";
-					else{ // room is playing
+					else{
 						param = handleSelectRspInPlayingRoom(param, player, room);
 					}
 				}
@@ -390,8 +388,8 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 		else{
 			if (database.getPlayers().get(callback).getRoom()==null){ 
 				this.lastResponse = "~";
-				database.getNicks().remove(database.getPlayers().get(callback).getNick()); // remove the player's NICK from the list
-				database.getPlayers().remove(callback); // remove the player from the database list
+				database.getNicks().remove(database.getPlayers().get(callback).getNick()); // removes the player's NICK from the list
+				database.getPlayers().remove(callback); // removes the player from the database list
 			}
 			else{
 				if (!database.getPlayers().get(callback).getRoom().isPlaying()){ 

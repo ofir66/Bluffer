@@ -14,26 +14,22 @@ import bgu.spl.tokenizer.StringMessage;
  */
 public class Room {
 	
-	/**
-	 * The name of the room
-	 */
 	private final String name;
 	/**
-	 * Field that indicates if the room is now at play mode
+	 * Indicates if the room is now at play mode
 	 */
 	private boolean isPlaying;
-	/**
-	 * the players list in the room (null-> no player in it)
-	 */
 	private ConcurrentLinkedQueue<Player> playersList;
 	/**
-	 * which game is last played
+	 * Last game that was played in this room
 	 * 
 	 */
 	private Game game;
 	/**
-	 * represents progress in the game
-	 * mapped to 0 by default. if mapped to 1-> question asked. if mapped to 2-> choices were given
+	 * Represents progress in a game.
+	 * if gameState == 0, no game is being played in this room right now. 
+	 * if gameState == 1, A game is being played and questions were being asked now. 
+	 * otherwise, gameState == 2 which means that a game is being played and answer choices were given now.
 	 */
 	private int gameState;
 	
@@ -53,10 +49,6 @@ public class Room {
 		this.playersList.remove(player);
 	}
 	
-	/** Auxiliary method
-	 * send a message to all players in this Room
-	 * @param msg the message to send
-	 */
 	public void sendMessageToAllPlayers(String msg){
 		Iterator<Player> it= this.playersList.iterator();
 		
@@ -68,11 +60,6 @@ public class Room {
 		}
 	}
 	
-	/** Auxiliary method
-	 * send a message to all players in this Room, except a certain player
-	 * @param msg the message to send
-	 * @param player the player that we don't want to send message to
-	 */
 	public void sendMessageToAllPlayersExceptSender(String msg, Player player){
 		Iterator<Player> it= this.playersList.iterator();
 		Player iPlayer;
@@ -87,10 +74,10 @@ public class Room {
 		}
 	}
 	
-	/** Auxiliary method (needed for a case a player choose to bluff with correct answer. we won't allow this)
-	 * MEANT ONLY FOR THE BLUFFER GAME - NEED TO BE CHANGED IF ADDING OTHER GAMES!!!
-	 * @param answer the answer the player chose
-	 * @return true if the answer to the last question is correct. false otherwise.
+	/**
+	 * Auxiliary method for bluffer game only. Change this method if add support for other games.
+	 * @param answer the answer that the player chose
+	 * @return true if the answer to the last question is correct. False otherwise.
 	 */
 	public boolean isCorrect(String answer){
 		if (game.getClass().getSimpleName().equals("Bluffer")){
@@ -99,10 +86,10 @@ public class Room {
 		
 		return false;
 	}
-	/** Auxiliary method (needed for a case a player choose to bluff with a different player's bluff. we won't allow this)
-	 * MEANT ONLY FOR THE BLUFFER GAME - NEED TO BE CHANGED IF ADDING OTHER GAMES!!!
-	 * @param answer the answer the player chose
-	 * @return true if the bluff (represented by answer) given by the player was already given by another player. false otherwise.
+	/**
+	 * Auxiliary method for bluffer game only. Change this method if add support for other games.
+	 * @param answer the answer that the player chose
+	 * @return true if the bluff (represented by answer) given by the player was already given by another player. False otherwise.
 	 */
 	public boolean isBluff(String answer){
 		if (game.getClass().getSimpleName().equals("Bluffer")){
@@ -113,7 +100,7 @@ public class Room {
 	}
 	
 	/**
-	 * The method starts a games in this Room.
+	 * Starts a games in this room.
 	 * @param gameName the game to start
 	 * @param callback represents the player who wants to start the game
 	 */	
@@ -130,9 +117,8 @@ public class Room {
 	}
 	
 	/**
-	 * Let us know if a given player has already bluffed in this round.
-	 * MEANT FOR BLUFFER GAME ONLY!!!
-	 * @param player the player we want to check if already bluffed
+	 * Auxiliary method for bluffer game only.
+	 * @param player the player to check if already bluffed
 	 * @return true if the player bluffed already, false otherwise.
 	 */
 	public boolean hasBluffed(Player player){
@@ -140,10 +126,9 @@ public class Room {
 	}
 	
 	/**
-	 * Let us know if a given player has already selected an answer in this round.
-	 * MEANT FOR BLUFFER GAME ONLY!!!
-	 * @param player the player we want to check if already answered
-	 * @return true if the player bluffed already, false otherwise.
+	 * Auxiliary method for bluffer game only.
+	 * @param the player to check if already answered
+	 * @return true if the player answered already, false otherwise.
 	 */
 	public boolean hasSelected(Player player){
 		return ((Bluffer)game).hasSelected(player);

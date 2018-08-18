@@ -15,7 +15,7 @@ public interface ServerProtocol <T > {
 	*/
 	void processMessage ( T msg , ProtocolCallback <T > callback ) ;
 	/**
-	* Determine whether the given message is the termination message .
+	* Determines whether the given message is the termination message .
 	*
 	* @param msg the message to examine
 	* @return true if the message is the termination message , false

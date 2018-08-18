@@ -14,7 +14,7 @@ public class FixedSeparatorMessageTokenizer implements MessageTokenizer<StringMe
 
    private final StringBuffer _stringBuf = new StringBuffer();
    /**
-	 * the fifo queue, which holds data coming from the socket. Access to the
+	 * The fifo queue, which holds data coming from the socket. Access to the
 	 * queue is serialized, to ensure correct processing order.
 	 */
    private final Vector<ByteBuffer> _buffers = new Vector<ByteBuffer>();

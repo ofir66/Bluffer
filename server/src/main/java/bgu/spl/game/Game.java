@@ -15,20 +15,20 @@ public interface Game {
 	 */
 	public void startGame(String name, ProtocolCallback<StringMessage> callback);
 	/**
-	 * handles a TXTRESP message from player
-	 * @param bluff the player's answer to a question
+	 * Handles a TXTRESP message from a player
+	 * @param bluff the player's bluff to a question
 	 * @param callback representing the player who sent the message
 	 */
 	public void TXTRESP(String bluff, ProtocolCallback<StringMessage> callback);
 	/**
-	 * selecting respond to a msg ans return message to the user by his callback function 
-	 * @param msg
+	 * Handles a SELECTRESP message from a player
+	 * @param msg the player's answer to a question
 	 * @param callback representing the player who sent the message
 	 */
 	public void SELECTRESP(String msg, ProtocolCallback<StringMessage> callback);
 	
 	/**
-	 * will create a new instance of the game in the room who wants to play it
+	 * Creates a new instance of a game
 	 */
 	public Game create();
 }
