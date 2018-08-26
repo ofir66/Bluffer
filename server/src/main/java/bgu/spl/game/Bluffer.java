@@ -179,7 +179,9 @@ public class Bluffer implements Game {
 			if (!this.isListContainsString(bluffers, iPlayer.getLastBluufingAnswer()))
 				bluffers.add(iPlayer.getLastBluufingAnswer()); // don't allow duplicates in the answer choices
 		}
-		ASKCHOICES=this.shuffleAnswers(bluffers); // create the ASKCHOICES
+		// create the ASKCHOICES
+		this.convertToLowerCase(bluffers);
+		ASKCHOICES=this.shuffleAnswers(bluffers);
 		ASKCHOICES="<    "+ASKCHOICES+"    >";
 		player.getRoom().sendMessageToAllPlayers(ASKCHOICES);
 	}
@@ -201,9 +203,6 @@ public class Bluffer implements Game {
 	private String shuffleAnswers(CopyOnWriteArrayList<String> answers){
 		String ASKCHOICES="ASKCHOICES";
 		
-		for (int i=0; i<answers.size(); ++i){ // switch to lower-case
-			answers.set(i, answers.get(i).toLowerCase());
-		}
 		answers.add(this.answers.get(this.round-1).toLowerCase()); // add the real answer
 		Collections.shuffle(answers); // shuffle
 		for (int i=0; i<answers.size(); ++i){ // create the ASKCHOICES
@@ -215,6 +214,12 @@ public class Bluffer implements Game {
 		}
 		
 		return ASKCHOICES;
+	}
+	
+	private void convertToLowerCase(CopyOnWriteArrayList<String> words){
+		for (int i=0; i<words.size(); ++i){
+			words.set(i, words.get(i).toLowerCase());
+		}
 	}
 
 	public void SELECTRESP(String msg, ProtocolCallback<StringMessage> callback) {
