@@ -9,12 +9,13 @@ messages , and reply at any point in time .
 *
 * @param <T> type of message that the protocol handles .
 */
+
 public interface ProtocolCallback <T > {
 /**
 * @param msg message to be sent
 * @throws IOException if the message could not be sent , or if the
 connection to this client has been closed .
 */
-	void sendMessage ( T msg ) throws java . io . IOException ;
+  void sendMessage ( T msg ) throws java . io . IOException ;
 }
 

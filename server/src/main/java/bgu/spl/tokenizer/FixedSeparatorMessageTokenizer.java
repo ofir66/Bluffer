@@ -10,84 +10,83 @@ import java.util.Vector;
 
 public class FixedSeparatorMessageTokenizer implements MessageTokenizer<StringMessage> {
 
-   private final String _messageSeparator;
+  private final String _messageSeparator;
 
-   private final StringBuffer _stringBuf = new StringBuffer();
-   /**
-	 * The fifo queue, which holds data coming from the socket. Access to the
-	 * queue is serialized, to ensure correct processing order.
-	 */
-   private final Vector<ByteBuffer> _buffers = new Vector<ByteBuffer>();
+  private final StringBuffer _stringBuf = new StringBuffer();
+  /**
+  * The fifo queue, which holds data coming from the socket. Access to the
+  * queue is serialized, to ensure correct processing order.
+  */
+  private final Vector<ByteBuffer> _buffers = new Vector<ByteBuffer>();
 
-   private final CharsetDecoder _decoder;
-   private final CharsetEncoder _encoder;
+  private final CharsetDecoder _decoder;
+  private final CharsetEncoder _encoder;
 
-   public FixedSeparatorMessageTokenizer(String separator, Charset charset) {
-      this._messageSeparator = separator;
+  public FixedSeparatorMessageTokenizer(String separator, Charset charset) {
+    this._messageSeparator = separator;
+    this._decoder = charset.newDecoder();
+    this._encoder = charset.newEncoder();
+  }
 
-      this._decoder = charset.newDecoder();
-      this._encoder = charset.newEncoder();
-   }
+  /**
+  * Add some bytes to the message.  
+  * Bytes are converted to chars, and appended to the internal StringBuffer.
+  * Complete messages can be retrieved using the nextMessage() method.
+  *
+  * @param bytes an array of bytes to be appended to the message.
+  */
+  public synchronized void addBytes(ByteBuffer bytes) {
+    _buffers.add(bytes); 
+  }
 
-   /**
-    * Add some bytes to the message.  
-    * Bytes are converted to chars, and appended to the internal StringBuffer.
-    * Complete messages can be retrieved using the nextMessage() method.
-    *
-    * @param bytes an array of bytes to be appended to the message.
-    */
-   public synchronized void addBytes(ByteBuffer bytes) {
-	   _buffers.add(bytes); 
-   }
+  /**
+  * Is there a complete message ready?.
+  * @return true the next call to nextMessage() will not return null, false otherwise.
+  */
+  public synchronized boolean hasMessage() {
+    ByteBuffer bytes;
+    CharBuffer chars;
 
-   /**
-    * Is there a complete message ready?.
-    * @return true the next call to nextMessage() will not return null, false otherwise.
-    */
-   public synchronized boolean hasMessage() {
-	   ByteBuffer bytes;
-	   CharBuffer chars;
-	   
-	   while(_buffers.size() > 0) {
-	      bytes = _buffers.remove(0);
-	      chars = CharBuffer.allocate(bytes.remaining());
- 	      this._decoder.decode(bytes, chars, false); // false: more bytes may follow. Any unused bytes are kept in the decoder.
- 	      chars.flip();
- 	      this._stringBuf.append(chars);
-	   }
-	   
-	   return this._stringBuf.indexOf(this._messageSeparator) > -1;
-   }
+    while(_buffers.size() > 0) {
+      bytes = _buffers.remove(0);
+      chars = CharBuffer.allocate(bytes.remaining());
+      this._decoder.decode(bytes, chars, false); // false: more bytes may follow. Any unused bytes are kept in the decoder.
+      chars.flip();
+      this._stringBuf.append(chars);
+    }
 
-   /**
-    * Get the next complete message if it exists, advancing the tokenizer to the next message.
-    * @return the next complete message, and null if no complete message exist.
-    */
-   public synchronized StringMessage nextMessage() {
-      String message = null;
-      int messageEnd = this._stringBuf.indexOf(this._messageSeparator);
-      
-      if (messageEnd > -1) {
-         message = this._stringBuf.substring(0, messageEnd);
-         this._stringBuf.delete(0, messageEnd+this._messageSeparator.length());
-      }
-      
-      return new StringMessage(message);
-   }
+    return this._stringBuf.indexOf(this._messageSeparator) > -1;
+  }
 
-   /**
-    * Convert the String message into bytes representation, taking care of encoding and framing.
-    *
-    * @return a ByteBuffer with the message content converted to bytes, after framing information has been added.
-    */
-   public ByteBuffer getBytesForMessage(StringMessage msg)  throws CharacterCodingException {
-      StringBuilder sb = new StringBuilder(msg.getMessage());
-      ByteBuffer bb;
-      
-      sb.append(this._messageSeparator);
-      bb = this._encoder.encode(CharBuffer.wrap(sb));
-      
-      return bb;
-   }
+  /**
+  * Get the next complete message if it exists, advancing the tokenizer to the next message.
+  * @return the next complete message, and null if no complete message exist.
+  */
+  public synchronized StringMessage nextMessage() {
+    String message = null;
+    int messageEnd = this._stringBuf.indexOf(this._messageSeparator);
+
+    if (messageEnd > -1) {
+      message = this._stringBuf.substring(0, messageEnd);
+      this._stringBuf.delete(0, messageEnd+this._messageSeparator.length());
+    }
+
+    return new StringMessage(message);
+  }
+
+  /**
+  * Convert the String message into bytes representation, taking care of encoding and framing.
+  *
+  * @return a ByteBuffer with the message content converted to bytes, after framing information has been added.
+  */
+  public ByteBuffer getBytesForMessage(StringMessage msg)  throws CharacterCodingException {
+    StringBuilder sb = new StringBuilder(msg.getMessage());
+    ByteBuffer bb;
+
+    sb.append(this._messageSeparator);
+    bb = this._encoder.encode(CharBuffer.wrap(sb));
+
+    return bb;
+  }
 
 }
