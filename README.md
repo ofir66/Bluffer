@@ -1,1 +1,1 @@
-Please read the "Game description and instructions" file.
+Please read the "Game Description And Instructions" file.
