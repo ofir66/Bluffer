@@ -44,12 +44,9 @@ public class FixedSeparatorMessageTokenizer implements MessageTokenizer<StringMe
   * @return true the next call to nextMessage() will not return null, false otherwise.
   */
   public synchronized boolean hasMessage() {
-    ByteBuffer bytes;
-    CharBuffer chars;
-
     while(_buffers.size() > 0) {
-      bytes = _buffers.remove(0);
-      chars = CharBuffer.allocate(bytes.remaining());
+      ByteBuffer bytes = _buffers.remove(0);
+      CharBuffer chars = CharBuffer.allocate(bytes.remaining());
       this._decoder.decode(bytes, chars, false); // false: more bytes may follow. Any unused bytes are kept in the decoder.
       chars.flip();
       this._stringBuf.append(chars);

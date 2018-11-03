@@ -18,7 +18,7 @@ public class InputThread implements Runnable {
   @Override
   public void run() {
     BufferedReader buffer=new BufferedReader(new InputStreamReader(System.in));
-    String line=null;
+    String line;
 
     while(true){
       try{ 

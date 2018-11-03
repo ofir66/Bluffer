@@ -42,8 +42,6 @@ public class Client {
   }
 
   private static void readInput(Socket clientSocket, BufferedReader in, BufferedReader userIn) {
-    String tmp;
-    int len;
     boolean closedByServer=false;
     KeyboardReadingThread readingThread= new KeyboardReadingThread(clientSocket, userIn);
     Thread t=new Thread(readingThread);
@@ -51,8 +49,8 @@ public class Client {
     t.start();   
     try{
       while(true){
-        tmp=in.readLine();
-        len=tmp.length();
+        String tmp=in.readLine();
+        int len=tmp.length();
         if (tmp.contains("~")) {
           t.interrupt();
           break; 

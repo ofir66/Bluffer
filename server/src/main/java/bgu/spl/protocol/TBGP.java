@@ -110,8 +110,6 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
   }
 
   private void nick_handle(String param, DataBase database, ProtocolCallback<StringMessage> callback){
-    Player player;
-
     if (param.isEmpty())
       this.lastResponse = "<SYSMSG NICK REJECTED No parameters were given>";
     else{
@@ -119,7 +117,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
         synchronized (database.getNicks()){
           if (!database.getNicks().contains(param)){ // nick is not taken
             database.getNicks().add(param);
-            player=new Player(param, callback);
+            Player player=new Player(param, callback);
             database.getPlayers().put(callback,player);
             this.lastResponse="<SYSMSG NICK ACCEPTED>";
           }
@@ -134,15 +132,12 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
   }
 
   private void join_handle(String param, DataBase database, ProtocolCallback<StringMessage> callback){
-    Player player;
-    Room room;
-
     if (param.isEmpty())
       this.lastResponse = "<SYSMSG JOIN REJECTED No parameters were given>";
     else{
-      player = database.getPlayers().get(callback);
+      Player player = database.getPlayers().get(callback);
       if (player!=null){ // otherwise there is no such player and he can't join a room
-        room = player.getRoom();
+        Room room = player.getRoom();
         if (room!=null){ // if the player is already in a room, need to check if the room is currently playing
           leaveToOtherRoom(param, database, player, room);
         }
@@ -215,15 +210,12 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
   }
 
   private void msg_handle(String param, DataBase database, ProtocolCallback<StringMessage> callback){
-    Player player;
-    Room room;
-
     if (param.isEmpty())
       this.lastResponse = "<SYSMSG MSG REJECTED No parameters were given>";
     else{
-      player = database.getPlayers().get(callback);
+      Player player = database.getPlayers().get(callback);
       if (player!=null){
-        room = player.getRoom();
+        Room room = player.getRoom();
         if (room!=null){
           if (!room.isPlaying()){
             this.lastResponse = "<SYSMSG MSG ACCEPTED>";
@@ -244,7 +236,6 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
 
   private void startGame_handle(DataBase database, ProtocolCallback<StringMessage> callback){
     Player player=database.getPlayers().get(callback);
-    JsonReader jreader;
 
     if (player==null){ // if the user tries to STARTGAME before having a nick
       this.lastResponse = "<SYSMSG STARTGAME REJECTED Must JOIN a room first>";
@@ -258,7 +249,7 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
             this.lastResponse = "<SYSMSG STARTGAME REJECTED A game has already started in this room>";
           else{ 
             try {
-              jreader = new JsonReader(new FileReader("bluffer.json"));
+              JsonReader jreader = new JsonReader(new FileReader("bluffer.json"));
               if ((new JsonParser().parse(jreader).getAsJsonObject()).get("questions").getAsJsonArray().size()<3)
                 this.lastResponse = "<SYSMSG STARTGAME REJECTED There are not enough questions in the database to start a game>";
               else{ // means there are enough questions for bluffer
@@ -282,17 +273,14 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
   }
 
   private void txtresp_handle(String param, DataBase database, ProtocolCallback<StringMessage> callback){
-    Player player;
-    Room room;
-
     if (param.isEmpty())
       this.lastResponse = "<SYSMSG TXTRESP REJECTED No parameters were given>";
     else{
-      player = database.getPlayers().get(callback);
+      Player player = database.getPlayers().get(callback);
       if (player == null) // player is null means player doesn't have a nick
         this.lastResponse = "<SYSMSG TXTRESP REJECTED Must choose a NICK first>";
       else{ // player has a nick
-        room = player.getRoom();
+        Room room = player.getRoom();
         if (room == null) 
           this.lastResponse = "<SYSMSG TXTRESP REJECTED Must JOIN a room first>";
         else{ 
@@ -328,17 +316,14 @@ public class TBGP implements AsyncServerProtocol<StringMessage> {
   }
 
   private void selectresp_handle(String param, DataBase database, ProtocolCallback<StringMessage> callback){
-    Player player;
-    Room room;
-
     if (param.isEmpty())
       this.lastResponse = "<SYSMSG SELECTRESP REJECTED No parameters were given>";
     else{
-      player = database.getPlayers().get(callback);
+      Player player = database.getPlayers().get(callback);
       if (player == null) // player has no NICK
         this.lastResponse = "<SYSMSG SELECTRESP REJECTED Must choose a NICK first>";
       else{ // player has a NICK
-        room = player.getRoom();
+        Room room = player.getRoom();
         if (room == null) // player is not in a room
           this.lastResponse = "<SYSMSG SELECTRESP REJECTED Must JOIN a room first>";
         else{ 

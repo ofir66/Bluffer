@@ -100,16 +100,14 @@ public class Bluffer implements Game {
     JsonElement element;
     JsonObject jobject;
     JsonArray jQuestions;
-    String question;
-    String answer;
 
     element = jparser.parse(jreader);
     if (element.isJsonObject()){
       jobject = element.getAsJsonObject();
       jQuestions = jobject.get("questions").getAsJsonArray();
       for (JsonElement jQuestion : jQuestions){
-        question = jQuestion.getAsJsonObject().get("questionText").getAsString();
-        answer = jQuestion.getAsJsonObject().get("realAnswer").getAsString();
+        String question = jQuestion.getAsJsonObject().get("questionText").getAsString();
+        String answer = jQuestion.getAsJsonObject().get("realAnswer").getAsString();
         questions.put(question, answer);
       }
     }
@@ -170,12 +168,11 @@ public class Bluffer implements Game {
   private void createAskChoices(Player player, ConcurrentLinkedQueue<Player> playersBluffed, CopyOnWriteArrayList<String> bluffers) {
 
     Iterator<Player> it;
-    Player iPlayer;
     String ASKCHOICES;
 
     it= playersBluffed.iterator();
     while (it.hasNext()){
-      iPlayer=it.next();
+      Player iPlayer=it.next();
       if (!this.isListContainsString(bluffers, iPlayer.getLastBluufingAnswer()))
       bluffers.add(iPlayer.getLastBluufingAnswer()); // don't allow duplicates in the answer choices
     }
@@ -294,9 +291,7 @@ public class Bluffer implements Game {
 
   private void calculateRoundScore() {
     Iterator<Player> i=this.players.iterator();
-    Iterator<Player> k;
     Player iPlayer;
-    Player kPlayer;
 
     while (i.hasNext()){ // for each player
       iPlayer=i.next();
@@ -314,9 +309,9 @@ public class Bluffer implements Game {
     i=this.players.iterator();
     while (i.hasNext()){ // for each player i
       iPlayer=i.next();
-      k=this.players.iterator();
+      Iterator<Player> k=this.players.iterator();
       while (k.hasNext()){ // for each player k, so that k!=i
-        kPlayer=k.next();
+        Player kPlayer=k.next();
         if (iPlayer!=kPlayer){
           if (this.shuffeledAnswers.get(kPlayer.getLastChoice()).equals(iPlayer.getLastBluufingAnswer().toLowerCase())){ // if player i fooled player k
             iPlayer.setRoundScore(iPlayer.getRoundScore()+5);
@@ -329,10 +324,9 @@ public class Bluffer implements Game {
 
   private void sendResultMessageToAllPlayers(){
     Iterator<Player> it= this.players.iterator();
-    Player iPlayer;
 
     while (it.hasNext()){
-      iPlayer=it.next();
+      Player iPlayer=it.next();
       try{
         if (iPlayer.isIsCorrectedOnLastQuestion())
           iPlayer.getCallback().sendMessage(new StringMessage("<GAMEMSG correct! +" +iPlayer.getRoundScore()+"pts>"));
@@ -346,10 +340,9 @@ public class Bluffer implements Game {
   private void summary(){
     String msg = "<GAMEMSG Summary:";
     Iterator<Player> it = this.players.iterator();
-    Player player;
 
     while (it.hasNext()){
-      player = it.next();
+      Player player = it.next();
       msg = msg+" "+player.getNick()+": "+player.getTotalScore()+"pts, ";
     }
     msg = msg.substring(0,msg.length()-2)+">";

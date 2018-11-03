@@ -62,10 +62,9 @@ public class Room {
 
   public void sendMessageToAllPlayersExceptSender(String msg, Player player){
     Iterator<Player> it= this.playersList.iterator();
-    Player iPlayer;
 
     while (it.hasNext()){
-      iPlayer=it.next();
+      Player iPlayer=it.next();
       try{
         if (iPlayer!=player)
           iPlayer.getCallback().sendMessage(new StringMessage(msg));
@@ -106,10 +105,9 @@ public class Room {
   */	
   public void startGame(String gameName,ProtocolCallback<StringMessage> callback){ 
     Iterator<Player> it = this.playersList.iterator();
-    Player player;
 
     while (it.hasNext()){
-      player =it.next();
+      Player player = it.next();
       player.setTotalScore(0);
       player.setRoundScore(0);
     }

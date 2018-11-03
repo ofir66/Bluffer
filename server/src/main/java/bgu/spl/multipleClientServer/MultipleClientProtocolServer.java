@@ -63,14 +63,12 @@ class ConnectionHandler implements Runnable {
 
   public void process() throws IOException
   {
-    String msg;
-
     while (!protocol.shouldClose() && !clientSocket.isClosed()){
       try{
         if (!tokenizer.isAlive())
           protocol.connectionTerminated();
         else{
-          msg = tokenizer.nextToken();
+          String msg = tokenizer.nextToken();
           protocol.processMessage(new StringMessage(msg), callback);
         }
       } 
@@ -126,7 +124,6 @@ class MultipleClientProtocolServer implements Runnable {
 
   public void run()
   {
-    Socket socket;
     Encoder encoder = new EncoderImpl("UTF-8");
 
     try {
@@ -145,7 +142,7 @@ class MultipleClientProtocolServer implements Runnable {
     while (true)
     {
       try {
-        socket = serverSocket.accept();
+        Socket socket = serverSocket.accept();
         StringTokenizer tokenizer = new StringTokenizer(new InputStreamReader(socket.getInputStream(),encoder.getCharset()),'\n');
         ConnectionHandler newConnection = new ConnectionHandler(socket,encoder,tokenizer, factory.create(), connectionCount);
         new Thread(newConnection).start();

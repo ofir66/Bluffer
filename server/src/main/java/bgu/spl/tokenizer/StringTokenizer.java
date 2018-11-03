@@ -18,8 +18,6 @@ public class StringTokenizer implements Tokenizer {
 
   public String nextToken() throws IOException {
     String ans = null;
-    StringBuilder sb;
-    int c;
 
     if (!isAlive())
       throw new IOException("tokenizer is closed");
@@ -28,7 +26,8 @@ public class StringTokenizer implements Tokenizer {
       // we are using a blocking stream, so we should always end up
       // with a message, or with an exception indicating an error in
       // the connection.
-      sb = new StringBuilder();
+      StringBuilder sb = new StringBuilder();
+      int c;
       // read char by char, until encountering the framing character, or
       // the connection is closed.
       while ((c = _isr.read()) != -1) {
